@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,13 +11,39 @@ import (
 )
 
 type pingServiceMock struct {
+	handlePingFn func() (string, error)
 }
 
 func (mock pingServiceMock) HandlePing() (string, error) {
-	return "pong", nil
+	return mock.handlePingFn()
 }
-func TestPing(t *testing.T) {
-	services.PingService = pingServiceMock{}
+
+func TestPingWithError(t *testing.T) {
+	serviceMock := pingServiceMock{}
+	serviceMock.handlePingFn = func() (string, error) {
+		return "", errors.New("error executing ping")
+	}
+	services.PingService = serviceMock
+
+	response := httptest.NewRecorder()
+	context, _ := gin.CreateTextContext(response)
+
+	Ping(context)
+
+	if response.Code != http.StatusInternalServerError {
+		t.Error("response code should be 500")
+
+	}
+	if response.Body.String() != "error executing ping" {
+		t.Error("error calling ping")
+	}
+}
+func TestPingNoError(t *testing.T) {
+	serviceMock := pingServiceMock{}
+	serviceMock.handlePingFn = func() (string, error) {
+		return "pong", nil
+	}
+	services.PingService = serviceMock
 
 	response := httptest.NewRecorder()
 	context, _ := gin.CreateTextContext(response)
