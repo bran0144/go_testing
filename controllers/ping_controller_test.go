@@ -6,9 +6,18 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pluralsight/webservice/go_testing/services"
 )
 
+type pingServiceMock struct {
+}
+
+func (mock pingServiceMock) HandlePing() (string, error) {
+	return "pong", nil
+}
 func TestPing(t *testing.T) {
+	services.PingService = pingServiceMock{}
+
 	response := httptest.NewRecorder()
 	context, _ := gin.CreateTextContext(response)
 
