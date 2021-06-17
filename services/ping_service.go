@@ -1,9 +1,18 @@
 package services
 
+import "fmt"
+
+type pingService struct{}
+
 const (
 	pong = "poing"
 )
 
-func HandlePing() string {
-	return pong
+var (
+	PingService = pingService{}
+)
+
+func (service pingService) HandlePing() (string, error) {
+	fmt.Println("doing somthing")
+	return pong, nil
 }
